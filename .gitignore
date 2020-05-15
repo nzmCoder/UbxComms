@@ -1,0 +1,13 @@
+# User-specific files
+*.aps
+*.user
+*.filter
+
+# Build products
+Release/
+Debug/
+
+Data/
+
+# User configuration
+.vs/
