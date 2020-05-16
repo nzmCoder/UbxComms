@@ -78,6 +78,8 @@ private:
    const int RECV_SERIAL_TIMER_ID = 1;
    const int RECV_SERIAL_TIMER_MSECS = 10;
    const int PROGRESS_RANGE = 500;
+   const CString STR_REC_OFF = "---";
+   const CString STR_REC_ON = "REC ON";
 
 public:
    // Framework generated message map functions.
@@ -101,5 +103,5 @@ public:
    afx_msg void OnBnClickedBtnOutFolder();
    afx_msg void OnBnClickedBtnRecOn();
    afx_msg void OnBnClickedBtnRecOff();
-   afx_msg void OnBnClickedBtnNavPosecef();
+   afx_msg void OnBnClickedBtnNavPosEcef();
 };

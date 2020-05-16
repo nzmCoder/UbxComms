@@ -13,22 +13,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-#include "stdafx.h"
-#include "Crc.h"
+#pragma once
+#include <cstdint>
 
-
-uint16_t Crc::Calc16(uint8_t *dataPtr, uint16_t dataLength)
+class ChkSum
 {
-   uint8_t chkA = 0;
-   uint8_t chkB = 0;
-
-   for(int i = 0; i < dataLength; ++i)
-   {
-      chkA += dataPtr[i];
-      chkB += chkA;
-   }
-
-   uint16_t retVal = (chkA << 8) + chkB;
-
-   return retVal;
-}
+public:
+   static uint16_t Calc16(uint8_t* dataPtr, uint16_t dataLength);
+};

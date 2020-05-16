@@ -40,7 +40,7 @@ BEGIN_MESSAGE_MAP(CUbxCommsDlg, CDialog)
    ON_BN_CLICKED(IDC_BTN_OUT_FOLDER, &CUbxCommsDlg::OnBnClickedBtnOutFolder)
    ON_BN_CLICKED(IDC_BTN_REC_ON, &CUbxCommsDlg::OnBnClickedBtnRecOn)
    ON_BN_CLICKED(IDC_BTN_REC_OFF, &CUbxCommsDlg::OnBnClickedBtnRecOff)
-   ON_BN_CLICKED(IDC_BTN_NAV_POSECEF, &CUbxCommsDlg::OnBnClickedBtnNavPosecef)
+   ON_BN_CLICKED(IDC_BTN_NAV_POSECEF, &CUbxCommsDlg::OnBnClickedBtnNavPosEcef)
 END_MESSAGE_MAP()
 
 CUbxCommsDlg::CUbxCommsDlg(CWnd* pParent)
@@ -102,7 +102,7 @@ BOOL CUbxCommsDlg::OnInitDialog()
    // Clear the static fields.
    ClearAllCtrls();
    mStatVersion.SetWindowText("");
-   mStatInd.SetWindowText("---");
+   mStatInd.SetWindowText(STR_REC_OFF);
 
    // Start the serial receive polling timer.
    SetTimer(RECV_SERIAL_TIMER_ID, RECV_SERIAL_TIMER_MSECS, NULL);
@@ -118,7 +118,7 @@ BOOL CUbxCommsDlg::OnInitDialog()
    mProtocol.SetupPort(str);
 
    str = mProfile.GetProfileStr("Config", "OutputFolder", "C:\\Projects");
-   mStatOutputFolder.SetWindowTextA(" " + str);
+   mStatOutputFolder.SetWindowText(" " + str);
 
    // Set range just to give reasonable
    // movement as chars are received.
@@ -288,6 +288,8 @@ void CUbxCommsDlg::AddTextToConsole(CString str)
 
    mEditConsole.SetWindowText(strConsole);
 
+   // This puts the window scroll location
+   // at the bottom so new text can be seen.
    mEditConsole.SetSel(0, -1);
    mEditConsole.SetSel(-1, -1);
 }
@@ -323,7 +325,7 @@ void CUbxCommsDlg::WriteToUbxFile(uint8_t* ptr, uint16_t size)
       // The passed in size indicates the payload size.
       // This function wants to write the entire packet,
       // including the 6 byte header and 2 byte checksum.
-      mUbxOutFile.Write(ptr - 6, size + 6 + 2);
+      mUbxOutFile.Write(ptr - HDR_SIZE, size + HDR_SIZE + CHK_SIZE);
    }
 }
 
@@ -401,7 +403,7 @@ void CUbxCommsDlg::PosLatLonHeight()
    mProtocol.SendMsgStartPeriodic(MSG_POS_LLH, 1);
 }
 
-void CUbxCommsDlg::OnBnClickedBtnNavPosecef()
+void CUbxCommsDlg::OnBnClickedBtnNavPosEcef()
 {
    mProtocol.SendMsgStartPeriodic(MSG_POS_ECEF, 1);
 }
@@ -527,7 +529,7 @@ void CUbxCommsDlg::ProcessEarthCenteredPosRsp(uint8_t* dataPtr, uint16_t size)
    double error = (double)fmtPtr->pAcc / 1e+2;
 
    CString str;
-   str.Format(" X:%011.2f  Y:%011.2fm  Z:%011.2fm (Err %2.2fm)",
+   str.Format(" X:%011.2fm  Y:%011.2fm  Z:%011.2fm (Err %2.2fm)",
       x, y, z, error);
 
    mStatPosEcef.SetWindowText(str);
@@ -627,7 +629,7 @@ CString CUbxCommsDlg::GetFolder(CString strFolderPath)
 {
    CFolderPickerDialog dlgPickFolder;
 
-   dlgPickFolder.m_ofn.lpstrTitle = "Select a folder that contains key files";
+   dlgPickFolder.m_ofn.lpstrTitle = "Select a folder for data storage";
    dlgPickFolder.m_ofn.lpstrInitialDir = strFolderPath;
    if (dlgPickFolder.DoModal() == IDOK)
    {
@@ -639,12 +641,12 @@ CString CUbxCommsDlg::GetFolder(CString strFolderPath)
 void CUbxCommsDlg::OnBnClickedBtnRecOn()
 {
    BeginUbxFile();
-   mStatInd.SetWindowText("REC ON");
+   mStatInd.SetWindowText(STR_REC_ON);
 }
 
 void CUbxCommsDlg::OnBnClickedBtnRecOff()
 {
    EndUbxFile();
-   mStatInd.SetWindowText("---");
+   mStatInd.SetWindowText(STR_REC_OFF);
 }
 

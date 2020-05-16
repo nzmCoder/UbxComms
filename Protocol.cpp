@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdint>
 #include "UbxCommsDlg.h"
 #include "Protocol.h"
-#include "Crc.h"
+#include "ChkSum.h"
 #include "Util.h"
 
 
@@ -63,7 +63,7 @@ void CProtocol::SetupPort(CString strPort)
       {
          // Port opened correctly. Now set attributes.
          mSerial.Setup(CSerial::EBaud9600, CSerial::EData8,
-                       CSerial::EParNone, CSerial::EStop1);
+            CSerial::EParNone, CSerial::EStop1);
          mSerial.SetupHandshaking(CSerial::EHandshakeOff);
          mSerial.SetupReadTimeouts(CSerial::EReadTimeoutNonblocking);
 
@@ -126,21 +126,24 @@ void CProtocol::AlignToNextStartFlag()
    }
 }
 
-bool CProtocol::VerifyRecvMsgCrc()
+bool CProtocol::VerifyRecvMsgChkSum()
 {
-   int crcIdx = mRecvLengthField + 6;
+   // Get checksum bytes in the message. . .
+   int chkIdx = mRecvLengthField + HDR_SIZE;
+   uint16_t chkOfMsg = (mRecvBuff[chkIdx] << 8) + mRecvBuff[chkIdx + 1];
 
-   uint16_t crcMsg = (mRecvBuff[crcIdx] << 8) + mRecvBuff[crcIdx + 1];
-   uint16_t crcCalc = Crc::Calc16(mRecvBuff + 2, mRecvLengthField + 4);
+   // . . . and compare to the calculated checksum.
+   uint16_t chkCalcd = ChkSum::Calc16(mRecvBuff + SYNC_SIZE, mRecvLengthField + 4);
 
-   return (crcMsg == crcCalc);
+   return (chkOfMsg == chkCalcd);
 }
 
-void CProtocol::SetSendMsgCrc(uint16_t size)
+void CProtocol::SetSendMsgChkSum(uint16_t size)
 {
    int crcIdx = size - 2;
 
-   uint16_t crcCalc = Crc::Calc16(mSendBuff + 2, size - 4);
+   // Calculate over byte indices defined by protocol.
+   uint16_t crcCalc = ChkSum::Calc16(mSendBuff + SYNC_SIZE, size - 4);
 
    mSendBuff[crcIdx] = (uint8_t)(crcCalc >> 8);
    mSendBuff[crcIdx + 1] = (uint8_t)(crcCalc);
@@ -228,7 +231,7 @@ void CProtocol::RecvSerialBytes()
       }
 
       // Check if we have enough chars to get the length field.
-      if (mRecvInSync && CalcRecvLen() >= 6)
+      if (mRecvInSync && CalcRecvLen() >= HDR_SIZE)
       {
          mRecvLengthField = (mRecvBuff[5] << 8) + mRecvBuff[4];
 
@@ -245,13 +248,13 @@ void CProtocol::RecvSerialBytes()
 
       // Check if we are in sync with the header bytes and have
       // received sufficient chars for the complete message yet.
-      if (mRecvInSync && (CalcRecvLen() == mRecvLengthField + HDR_SIZE))
+      if (mRecvInSync && (CalcRecvLen() == mRecvLengthField + HDRCHK_SIZE))
       {
-         if (VerifyRecvMsgCrc())
+         if (VerifyRecvMsgChkSum())
          {
             // At this moment we now have all the
             // bytes of a complete, valid message.
-            DisplayMsg(mRecvLengthField + HDR_SIZE, (MsgFormat_t*)mRecvBuff);
+            DisplayMsg(mRecvLengthField + HDRCHK_SIZE, (MsgFormat_t*)mRecvBuff);
 
             // Activate the call-back mechanism to give the
             // higher layer process the received message.
@@ -278,7 +281,7 @@ void CProtocol::SendMsg(uint16_t msgId, uint8_t* dataPtr, uint16_t dataSize)
    ClearSendBuff();
 
    MsgFormat_t* pMsg = (MsgFormat_t*)mSendBuff;
-   uint16_t msgLength = dataSize + HDR_SIZE;
+   uint16_t msgLength = dataSize + HDRCHK_SIZE;
 
    pMsg->Sync[0] = START_PATTERN[0];
    pMsg->Sync[1] = START_PATTERN[1];
@@ -291,7 +294,7 @@ void CProtocol::SendMsg(uint16_t msgId, uint8_t* dataPtr, uint16_t dataSize)
       pMsg->Data[i] = dataPtr[i];
    }
 
-   SetSendMsgCrc(msgLength);
+   SetSendMsgChkSum(msgLength);
 
    DisplayMsg(msgLength, (MsgFormat_t*)mSendBuff);
 
@@ -359,7 +362,7 @@ void CProtocol::SendMsgEnableRxmSfrb()
    SendMsg((uint16_t)MSG_UPD_DOWNL, (uint8_t*)Data, (uint16_t)sizeof(Data));
 }
 
-void CProtocol::SendMsgStartPeriodic(uint16_t msgId, uint8_t Rate)
+void CProtocol::SendMsgStartPeriodic(uint16_t msgId, uint8_t rate)
 {
    struct MsgFmtCfgPrt_t
    {
@@ -370,7 +373,7 @@ void CProtocol::SendMsgStartPeriodic(uint16_t msgId, uint8_t Rate)
    MsgFmtCfgPrt_t msg = { 0 };
 
    msg.MsgId = Util::Reverse16(msgId);
-   msg.Rate = Rate;  // Per second.
+   msg.Rate = rate;  // Per second.
 
    SendMsg((uint16_t)MSG_CFG_MSG, (uint8_t*)&msg, (uint16_t)sizeof(msg));
 }

@@ -16,13 +16,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #include <cstdint>
 
-const uint16_t HDR_SIZE = 8;
+const uint16_t SYNC_SIZE = 2;
+const uint16_t HDR_SIZE = 6;
+const uint16_t CHK_SIZE = 2;
+const uint16_t HDRCHK_SIZE = HDR_SIZE + CHK_SIZE;
 const uint16_t MAX_DATA_SIZE = 512;
 
 #pragma pack(1)
 struct MsgFormat_t
 {
-   uint8_t  Sync[2];
+   uint8_t  Sync[SYNC_SIZE];
    uint16_t MsgId;
    uint16_t Length;
    uint8_t  Data[MAX_DATA_SIZE];

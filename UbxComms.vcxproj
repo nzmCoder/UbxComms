@@ -108,7 +108,7 @@
     <ClInclude Include="Serial.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Protocol.h" />
-    <ClInclude Include="Crc.h" />
+    <ClInclude Include="ChkSum.h" />
     <ClInclude Include="Profile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -119,7 +119,7 @@
     <ClCompile Include="UbxCommsDlg.cpp" />
     <ClCompile Include="Util.cpp" />
     <ClCompile Include="Protocol.cpp" />
-    <ClCompile Include="Crc.cpp" />
+    <ClCompile Include="ChkSum.cpp" />
     <ClCompile Include="Profile.cpp" />
   </ItemGroup>
   <ItemGroup>

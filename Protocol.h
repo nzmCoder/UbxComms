@@ -35,8 +35,8 @@ public: // Methods.
    void SendMsgSetCfgPrt();
    void SendMsgEnableRxmRaw();
    void SendMsgEnableRxmSfrb();
-   void SendMsgStartPeriodic(uint16_t msgId, uint8_t Rate);
-   
+   void SendMsgStartPeriodic(uint16_t msgId, uint8_t rate);
+
 private: // Methods.
    void ClearRecvBuff();
    void ClearSendBuff();
@@ -44,10 +44,10 @@ private: // Methods.
    void RecvMsg();
 
    void AlignToNextStartFlag();
-   bool VerifyRecvMsgCrc();
+   bool VerifyRecvMsgChkSum();
    int CalcRecvLen();
 
-   void SetSendMsgCrc(uint16_t size);
+   void SetSendMsgChkSum(uint16_t size);
 
    void DisplayMsg(uint16_t msgLength, MsgFormat_t* pMsg);
 

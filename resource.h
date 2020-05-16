@@ -31,7 +31,6 @@
 #define IDC_BTN_OUT_FOLDER              1019
 #define IDC_PROGRESS                    1020
 #define IDC_LIST_RAWDATA                1021
-#define IDC_STATIC_POSITION2            1022
 #define IDC_STATIC_POSECEF              1022
 
 // Next default values for new objects

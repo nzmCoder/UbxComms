@@ -31,31 +31,31 @@ CProfile::CProfile()
 CProfile::~CProfile()
 {
    // Only save to file if the profile was changed.
-   if(mNeedsSave)
+   if (mNeedsSave)
    {
       CFile file;
 
       // Save the profile array to the storage file.
-      if(!file.Open(mStrDataFullPath, CFile::modeCreate | CFile::modeWrite))
+      if (!file.Open(mStrDataFullPath, CFile::modeCreate | CFile::modeWrite))
       {
          AfxMessageBox("Data settings could not be saved at: "
-                       + mStrDataFullPath, MB_ICONSTOP);
+            + mStrDataFullPath, MB_ICONSTOP);
       }
       else
       {
          // Write XML header.
          CString str;
          str = "<?xml version=\"1.0\"?>\r\n<!-- This file contains"\
-               " persistent data for the application -->\r\n<data>\r\n";
+            " persistent data for the application -->\r\n<data>\r\n";
          file.Write(str, str.GetLength());
 
          int i;
-         for(i = 0; i < TABLE_SIZE; ++i)
+         for (i = 0; i < TABLE_SIZE; ++i)
          {
             _WriteElement(file,
-                          mProfileTable[i].strSection,
-                          mProfileTable[i].strEntry,
-                          mProfileTable[i].strValue);
+               mProfileTable[i].strSection,
+               mProfileTable[i].strEntry,
+               mProfileTable[i].strValue);
          }
 
          // Write XML footer.
@@ -74,7 +74,7 @@ void CProfile::Init(CString strDataFileName, bool bUseAppData)
    mStrDataFileName = strDataFileName;
 
    // Only allow init once.
-   if(mWasInitPerformed)
+   if (mWasInitPerformed)
    {
       // It could mess up the filepath if it is allowed to be called twice.
       AfxMessageBox("Programming error! Init called a second time.");
@@ -86,14 +86,14 @@ void CProfile::Init(CString strDataFileName, bool bUseAppData)
    mNeedsSave = false;
    CFile file;
 
-   if(bUseAppData)
+   if (bUseAppData)
    {
       // Adjust the name to place the profile in the user's %appdata% folder.
       mStrDataFileName = PrepareAppDataFilename(mStrDataFileName);
    }
 
    // Load the profile array from the storage file.
-   if(!file.Open(mStrDataFileName, CFile::modeRead))
+   if (!file.Open(mStrDataFileName, CFile::modeRead))
    {
       // File didn't open properly so just set the filename.
       // we will create a new file later at destruction time.
@@ -104,7 +104,7 @@ void CProfile::Init(CString strDataFileName, bool bUseAppData)
       // Open the existing file and read in the data.
       mStrDataFullPath = file.GetFilePath();
 
-      for(int i = 0; i < TABLE_SIZE; ++i)
+      for (int i = 0; i < TABLE_SIZE; ++i)
       {
          _ReadElement(file, mProfileTable[i].strSection, mProfileTable[i].strEntry, mProfileTable[i].strValue);
       }
@@ -127,7 +127,7 @@ UINT CProfile::GetProfileInt(CString strSection, CString strEntry, int nDefault)
 
    int i = 0;
 
-   if((i = _FindEntry(strSection, strEntry)) != -1)
+   if ((i = _FindEntry(strSection, strEntry)) != -1)
    {
       nValue = atoi(mProfileTable[i].strValue);
    }
@@ -146,7 +146,7 @@ bool CProfile::WriteProfileInt(CString strSection, CString strEntry, int nValue)
    CString strValue;
    strValue.Format("%d", nValue);
 
-   if((i = _FindEntry(strSection, strEntry)) == -1)
+   if ((i = _FindEntry(strSection, strEntry)) == -1)
    {
       // Not found, so add new entry.
       _AddEntry(strSection, strEntry, strValue);
@@ -170,7 +170,7 @@ CString CProfile::GetProfileStr(CString strSection, CString strEntry, CString st
 
    int i = 0;
 
-   if((i = _FindEntry(strSection, strEntry)) != -1)
+   if ((i = _FindEntry(strSection, strEntry)) != -1)
    {
       strValue = mProfileTable[i].strValue;
    }
@@ -186,7 +186,7 @@ bool CProfile::WriteProfileStr(CString strSection, CString strEntry, CString str
    mNeedsSave = true;
 
    int i;
-   if((i = _FindEntry(strSection, strEntry)) == -1)
+   if ((i = _FindEntry(strSection, strEntry)) == -1)
    {
       // Not found, so add new entry.
       _AddEntry(strSection, strEntry, strValue);
@@ -223,8 +223,8 @@ CString CProfile::PrepareAppDataFilename(CString strFileName)
    strAppDataPath += "\\nzmCoder";
 
    // This will create our folder in AppData only if it does not exist.
-   if(CreateDirectory(strAppDataPath, NULL) ||
-         ERROR_ALREADY_EXISTS == GetLastError())
+   if (CreateDirectory(strAppDataPath, NULL) ||
+      ERROR_ALREADY_EXISTS == GetLastError())
    {
       // One way or another, our AppData data folder now exists.
       // Concatenate to form the fully qualified user filename.
@@ -249,10 +249,10 @@ int CProfile::_FindEntry(CString strSection, CString strEntry)
    // Return index of found entry, -1 if not found.
    int nFoundIdx = -1;
 
-   for(int i = 0; i < TABLE_SIZE; ++i)
+   for (int i = 0; i < TABLE_SIZE; ++i)
    {
-      if(mProfileTable[i].strSection == strSection
-            && mProfileTable[i].strEntry == strEntry)
+      if (mProfileTable[i].strSection == strSection
+         && mProfileTable[i].strEntry == strEntry)
       {
          nFoundIdx = i;
          break;
@@ -266,9 +266,9 @@ bool CProfile::_AddEntry(CString strSection, CString strEntry, CString strValue)
 {
    bool bResult = false;
 
-   for(int i = 0; i < TABLE_SIZE; ++i)
+   for (int i = 0; i < TABLE_SIZE; ++i)
    {
-      if(mProfileTable[i].strSection.IsEmpty())
+      if (mProfileTable[i].strSection.IsEmpty())
       {
          // copy the strings in
          mProfileTable[i].strSection = strSection;
@@ -298,10 +298,9 @@ void CProfile::_ReadElement(CFile& file, CString& strSection, CString& strEntry,
    {
       n = file.Read(&c, 1);
       str += c;
-   }
-   while(c != '/' && n == 1);
+   } while (c != '/' && n == 1);
 
-   if(n != 1) bValid = false;
+   if (n != 1) bValid = false;
 
    // Parse the "section" tag.
    n = str.Find("section=", 0);
@@ -346,9 +345,9 @@ void CProfile::_WriteElement(CFile& file, CString strSection, CString strEntry, 
 {
    CString str;
    str.Format("<element section=\"%s\" entry=\"%s\" value=\"%s\"></element>\r\n",
-              strSection,
-              strEntry,
-              strValue);
+      strSection,
+      strEntry,
+      strValue);
 
    file.Write(str, str.GetLength());
 }

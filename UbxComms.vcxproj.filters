@@ -36,7 +36,7 @@
     <ClInclude Include="Protocol.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Crc.h">
+    <ClInclude Include="ChkSum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MsgFormat.h">
@@ -68,7 +68,7 @@
     <ClCompile Include="Protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Crc.cpp">
+    <ClCompile Include="ChkSum.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Serial.cpp">
