@@ -44,7 +44,7 @@ protected:
    CStatic mStatOutputFolder;
    CStatic mStatInd;
    CStatic mStatPosEcef;
-   CListBox mListRaw;
+   CListCtrl mListRaw;
    CProgressCtrl mProgress;
 
    int mProgressPos;
@@ -74,6 +74,9 @@ private:
    void BeginUbxFile();
    void WriteToUbxFile(uint8_t* ptr, uint16_t size);
    void EndUbxFile();
+   CString GetRinexNameFmt();
+   void PrepareListCtrl();
+   void PopulateListCtrl(CString str[], int count);
 
    const int RECV_SERIAL_TIMER_ID = 1;
    const int RECV_SERIAL_TIMER_MSECS = 10;

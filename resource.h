@@ -24,7 +24,6 @@
 #define IDC_STATIC_UBX_RAW              1013
 #define IDC_STATIC_OUT_FOLDER           1014
 #define IDC_BTN_SET_FOLDER              1015
-#define IDC_BTN_NAV_POSECEF             1015
 #define IDC_BTN_REC_ON                  1016
 #define IDC_BTN_REC_OFF                 1017
 #define IDC_STATIC_REC_IND              1018
@@ -32,6 +31,7 @@
 #define IDC_PROGRESS                    1020
 #define IDC_LIST_RAWDATA                1021
 #define IDC_STATIC_POSECEF              1022
+#define IDC_BTN_NAV_POSECEF             1023
 
 // Next default values for new objects
 // 
@@ -39,7 +39,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

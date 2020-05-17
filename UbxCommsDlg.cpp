@@ -55,7 +55,6 @@ void CUbxCommsDlg::DoDataExchange(CDataExchange* pDX)
    CDialog::DoDataExchange(pDX);
    DDX_Control(pDX, IDC_CMBO_PORT, mCmboPort);
    DDX_Control(pDX, IDC_EDIT_CONSOLE, mEditConsole);
-   DDX_Control(pDX, IDC_LIST_RAWDATA, mListRaw);
    DDX_Control(pDX, IDC_STATIC_VER, mStatVersion);
    DDX_Control(pDX, IDC_STATIC_TIME_UTC, mStatUtc);
    DDX_Control(pDX, IDC_STATIC_POSITION, mStatPosition);
@@ -64,6 +63,7 @@ void CUbxCommsDlg::DoDataExchange(CDataExchange* pDX)
    DDX_Control(pDX, IDC_STATIC_OUT_FOLDER, mStatOutputFolder);
    DDX_Control(pDX, IDC_STATIC_REC_IND, mStatInd);
    DDX_Control(pDX, IDC_PROGRESS, mProgress);
+   DDX_Control(pDX, IDC_LIST_RAWDATA, mListRaw);
 }
 
 BOOL CUbxCommsDlg::OnInitDialog()
@@ -98,6 +98,8 @@ BOOL CUbxCommsDlg::OnInitDialog()
       DEFAULT_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
       DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Fixedsys");
    mEditConsole.SetFont(&mFont, TRUE);
+
+   PrepareListCtrl();
 
    // Clear the static fields.
    ClearAllCtrls();
@@ -279,6 +281,41 @@ void CUbxCommsDlg::OnTimer(UINT_PTR nIDEvent)
    CDialog::OnTimer(nIDEvent);
 }
 
+void CUbxCommsDlg::PrepareListCtrl()
+{
+   // The trailling spaces are used to define the column widths.
+   mListRaw.InsertColumn(0, "SV  ");
+   mListRaw.InsertColumn(1, "Carrier Phase (m)  ");
+   mListRaw.InsertColumn(2, "Pseudorange (m)    ");
+   mListRaw.InsertColumn(3, "Doppler (Hz) ");
+   mListRaw.InsertColumn(4, "Qual   ");
+   mListRaw.InsertColumn(5, "db Hz  ");
+   mListRaw.InsertColumn(6, "Lock");
+
+   mListRaw.SetExtendedStyle(mListRaw.GetExtendedStyle()
+      | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP );
+
+   mListRaw.SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(2, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(3, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(4, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(5, LVSCW_AUTOSIZE_USEHEADER);
+   mListRaw.SetColumnWidth(6, 40);  // Fixed width will avoid horizontal scroll bar.
+
+   // Set alignment of all columns to right-justified.
+   LVCOLUMN col;
+   col.mask = LVCF_FMT;
+   col.fmt = LVCFMT_RIGHT;
+   mListRaw.SetColumn(0, &col);
+   mListRaw.SetColumn(1, &col);
+   mListRaw.SetColumn(2, &col);
+   mListRaw.SetColumn(3, &col);
+   mListRaw.SetColumn(4, &col);
+   mListRaw.SetColumn(5, &col);
+   mListRaw.SetColumn(6, &col);
+}
+
 void CUbxCommsDlg::AddTextToConsole(CString str)
 {
    CString strConsole;
@@ -301,11 +338,8 @@ void CUbxCommsDlg::ClearTextConsole()
 
 void CUbxCommsDlg::BeginUbxFile()
 {
-   CTime time = CTime::GetCurrentTime();
-   CString strDate = time.FormatGmt("%Y.%j.%H.%M");
-
    CString strFileName = mProfile.GetProfileStr("Config", "OutputFolder", "C:\\Projects")
-      + "\\" + strDate + ".ubx";
+      + "\\uBlox" + GetRinexNameFmt() + ".ubx";
 
    if (!mUbxOutFile.Open(strFileName, CFile::modeCreate | CFile::modeWrite | CFile::typeBinary))
    {
@@ -314,6 +348,30 @@ void CUbxCommsDlg::BeginUbxFile()
       AfxMessageBox(str);
       return;
    }
+}
+
+CString CUbxCommsDlg::GetRinexNameFmt()
+{
+   // Returns a name that encodes the date and time
+   // similar to the RINEX naming convention, DDDHMM-YY:
+   // DDD - day of the year,
+   // H - letter indicating hour of the day,
+   // MM - minute,
+   // YY - year.
+
+   CTime time(CTime::GetCurrentTime());
+   tm tmGmt;
+   time.GetGmtTm(&tmGmt);
+
+   int day = tmGmt.tm_yday + 1;
+   char hour = tmGmt.tm_hour + 'a';
+   int minute = tmGmt.tm_min;
+   int year = tmGmt.tm_year - 100;
+
+   CString strFilename;
+   strFilename.Format("%03d%c%02d-%02d", day, hour, minute, year);
+
+   return strFilename;
 }
 
 void CUbxCommsDlg::WriteToUbxFile(uint8_t* ptr, uint16_t size)
@@ -363,6 +421,11 @@ void CUbxCommsDlg::RecvMsgCallBack(uint16_t cmdId, uint8_t* dataPtr, uint16_t si
       ProcessUbxRawRsp(dataPtr, size);
       break;
 
+   case MSG_RXM_SFRB:
+      OutputDebugString("\r\nMSG_RXM_SFRB\r\n");
+      WriteToUbxFile(dataPtr, size);
+      break;
+
    case MSG_POS_LLH:
       OutputDebugString("\r\nMSG_POS_LLH\r\n");
       ProcessLatLonHeightRsp(dataPtr, size);
@@ -391,6 +454,7 @@ void CUbxCommsDlg::OnBnClickedSendRxmRawOn()
    mProtocol.SendMsgEnableRxmRaw();
    mProtocol.SendMsgEnableRxmSfrb();
    mProtocol.SendMsgStartPeriodic(MSG_RXM_RAW, 1);
+   mProtocol.SendMsgStartPeriodic(MSG_RXM_SFRB, 1);
 }
 
 void CUbxCommsDlg::OnBnClickedSendTimeUtc()
@@ -411,6 +475,7 @@ void CUbxCommsDlg::OnBnClickedBtnNavPosEcef()
 void CUbxCommsDlg::OnBnClickedAllMsgsOff()
 {
    mProtocol.SendMsgStartPeriodic(MSG_RXM_RAW, 0);
+   mProtocol.SendMsgStartPeriodic(MSG_RXM_SFRB, 0);
    mProtocol.SendMsgStartPeriodic(MSG_TIME_UTC, 0);
    mProtocol.SendMsgStartPeriodic(MSG_POS_LLH, 0);
    mProtocol.SendMsgStartPeriodic(MSG_POS_ECEF, 0);
@@ -575,14 +640,33 @@ void CUbxCommsDlg::ProcessUbxRawRsp(uint8_t* dataPtr, uint16_t size)
    dataPtr += sizeof(MsgFmtHdr_t);
    MsgFmtSV_t* fmtSvPtr = (MsgFmtSV_t*)dataPtr;
 
-   mListRaw.ResetContent();
+   mListRaw.DeleteAllItems();
    for (size_t i = 0; i < numSV; ++i)
    {
-      str.Format(" %02d: CP= %08.3f PR= %08.3f DO=%08.3f [%d-%d-%d]",
-         fmtSvPtr->sv, fmtSvPtr->cpMes, fmtSvPtr->prMes, fmtSvPtr->doMes,
-         fmtSvPtr->mesQI, fmtSvPtr->cno, fmtSvPtr->lli);
+      CString str;
 
-      mListRaw.AddString(str);
+      // Add items on a row of the list ctrl.
+      str.Format("%02d", fmtSvPtr->sv);
+      int item = mListRaw.InsertItem(0, str);
+
+      str.Format("%1.3f", fmtSvPtr->cpMes);
+      mListRaw.SetItem(item, 1, LVIF_TEXT, str, 0, 0, 0, 0);
+
+      str.Format("%1.3f", fmtSvPtr->prMes);
+      mListRaw.SetItem(item, 2, LVIF_TEXT, str, 0, 0, 0, 0);
+
+      str.Format("%1.3f", fmtSvPtr->doMes);
+      mListRaw.SetItem(item, 3, LVIF_TEXT, str, 0, 0, 0, 0);
+
+      str.Format("%d", fmtSvPtr->mesQI);
+      mListRaw.SetItem(item, 4, LVIF_TEXT, str, 0, 0, 0, 0);
+
+      str.Format("%d", fmtSvPtr->cno);
+      mListRaw.SetItem(item, 5, LVIF_TEXT, str, 0, 0, 0, 0);
+
+      str.Format("%d", fmtSvPtr->lli);
+      mListRaw.SetItem(item, 6, LVIF_TEXT, str, 0, 0, 0, 0);
+
       fmtSvPtr += 1;
    }
 }
