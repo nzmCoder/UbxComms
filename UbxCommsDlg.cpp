@@ -106,9 +106,13 @@ BOOL CUbxCommsDlg::OnInitDialog()
    mStatVersion.SetWindowText("");
    mStatInd.SetWindowText(STR_REC_OFF);
 
-   // Start the serial receive polling timer.
+   // Start the timer(s).
    SetTimer(RECV_SERIAL_TIMER_ID, RECV_SERIAL_TIMER_MSECS, NULL);
-   OutputDebugString("Started Serial Timer.\r\n");
+#ifdef FEATURE_SEND_TEST
+   SetTimer(SEND_SERIAL_TIMER_ID, SEND_SERIAL_TIMER_MSECS, NULL);
+#endif 
+
+   OutputDebugString("Started Serial Timer(s).\r\n");
 
    // Set up access to persistent data.
    mProfile.Init("UbxComms.xml", true);
@@ -277,13 +281,19 @@ void CUbxCommsDlg::OnTimer(UINT_PTR nIDEvent)
    {
       mProtocol.RecvSerialBytes();
    }
+#ifdef FEATURE_SEND_TEST
+   else if (nIDEvent == SEND_SERIAL_TIMER_ID)
+   {
+      mProtocol.SendMsgMonVer();
+   }
+#endif
 
    CDialog::OnTimer(nIDEvent);
 }
 
 void CUbxCommsDlg::PrepareListCtrl()
 {
-   // The trailling spaces are used to define the column widths.
+   // The trailing spaces are used to define the column widths.
    mListRaw.InsertColumn(0, "SV  ");
    mListRaw.InsertColumn(1, "Carrier Phase (m)  ");
    mListRaw.InsertColumn(2, "Pseudorange (m)    ");
@@ -293,7 +303,7 @@ void CUbxCommsDlg::PrepareListCtrl()
    mListRaw.InsertColumn(6, "Lock");
 
    mListRaw.SetExtendedStyle(mListRaw.GetExtendedStyle()
-      | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP );
+      | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
    mListRaw.SetColumnWidth(0, LVSCW_AUTOSIZE_USEHEADER);
    mListRaw.SetColumnWidth(1, LVSCW_AUTOSIZE_USEHEADER);
@@ -322,6 +332,9 @@ void CUbxCommsDlg::AddTextToConsole(CString str)
    mEditConsole.GetWindowText(strConsole);
 
    strConsole += str;
+
+   // For performance reasons, don't allow console text to grow too long.
+   strConsole = strConsole.Right(0xFFF);
 
    mEditConsole.SetWindowText(strConsole);
 
@@ -678,6 +691,7 @@ void CUbxCommsDlg::ClearAllCtrls()
    mStatPosition.SetWindowText("");
    mStatPosEcef.SetWindowText("");
    mEditConsole.SetWindowText("");
+   mListRaw.DeleteAllItems();
    mProgress.SetPos(0);
    mProgressPos = 0;
 }

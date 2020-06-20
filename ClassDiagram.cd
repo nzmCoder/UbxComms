@@ -1,0 +1,188 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ChkSum">
+    <Position X="5.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>ChkSum.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CAboutDlg">
+    <Position X="5.75" Y="5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CAboutDlg::__unnamed_enum_0002_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>AboutDlg.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAEAAAAAAABAABAAAAAAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>AboutDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CProfile">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="CProfile::t_ProfileEntry" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Profile.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Struct Name="CProfile::__unnamed_struct_0007_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Profile.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Struct>
+      <Enum Name="CProfile::__unnamed_enum_0007_2" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Profile.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>QIAAQIIgEAIAAADAAAgAAIA2QAACAAAAAAACAAAAAAA=</HashCode>
+      <FileName>Profile.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CProtocol">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAQAIGIAQAAAADAoABKAAAAAQIAAACASAAABAGDRA=</HashCode>
+      <FileName>Protocol.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CSerial">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Typedef Name="CSerial::EParity" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="CSerial::__unnamed_enum_000c_9" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="CSerial::__unnamed_enum_000c_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="CSerial::__unnamed_enum_000c_4" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Typedef Name="CSerial::EStopBits" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="CSerial::__unnamed_enum_000c_7" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Enum Name="CSerial::__unnamed_enum_000c_2" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Typedef Name="CSerial::EBaudrate" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Class Name="CSerial::CDCB" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Enum Name="CSerial::__unnamed_enum_000c_5" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Typedef Name="CSerial::EPort" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="CSerial::__unnamed_enum_000c_8" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Typedef Name="CSerial::EEvent" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="CSerial::EReadTimeout" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="CSerial::EError" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Typedef Name="CSerial::EDataBits" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="CSerial::__unnamed_enum_000c_3" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+      <Typedef Name="CSerial::EHandshake" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Typedef>
+      <Enum Name="CSerial::__unnamed_enum_000c_6" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Serial.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>IQBAgCyBCBAQKEQBAAANYBAihAggAgAAICIQAAGEBwE=</HashCode>
+      <FileName>Serial.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CUbxCommsApp">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAQAAAAA=</HashCode>
+      <FileName>UbxComms.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CUbxCommsDlg">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="CUbxCommsDlg::__unnamed_enum_0012_1" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>UbxCommsDlg.h</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>HADIAAMgCRCiFBgAQJAiQhmAAoKAYKUUgCAFACDUAQM=</HashCode>
+      <FileName>UbxCommsDlg.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Util">
+    <Position X="5.75" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAQAAAAAAAAAAA=</HashCode>
+      <FileName>Util.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

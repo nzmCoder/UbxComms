@@ -76,10 +76,13 @@ private:
    void EndUbxFile();
    CString GetRinexNameFmt();
    void PrepareListCtrl();
-   void PopulateListCtrl(CString str[], int count);
 
    const int RECV_SERIAL_TIMER_ID = 1;
-   const int RECV_SERIAL_TIMER_MSECS = 10;
+   const int RECV_SERIAL_TIMER_MSECS = 50;
+
+   const int SEND_SERIAL_TIMER_ID = 2;
+   const int SEND_SERIAL_TIMER_MSECS = 1100;
+
    const int PROGRESS_RANGE = 500;
    const CString STR_REC_OFF = "---";
    const CString STR_REC_ON = "REC ON";

@@ -102,6 +102,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="AboutDlg.h" />
+    <ClInclude Include="TinyXml2.h" />
     <ClInclude Include="UbxComms.h" />
     <ClInclude Include="UbxCommsDlg.h" />
     <ClInclude Include="MsgFormat.h" />
@@ -115,6 +116,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="AboutDlg.cpp" />
     <ClCompile Include="Serial.cpp" />
+    <ClCompile Include="TinyXml2.cpp" />
     <ClCompile Include="UbxComms.cpp" />
     <ClCompile Include="UbxCommsDlg.cpp" />
     <ClCompile Include="Util.cpp" />
@@ -126,6 +128,7 @@
     <ResourceCompile Include="UbxComms.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram.cd" />
     <None Include="res\UbxComms.rc2" />
   </ItemGroup>
   <ItemGroup>

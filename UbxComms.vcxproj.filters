@@ -48,6 +48,9 @@
     <ClInclude Include="Profile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TinyXml2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UbxComms.cpp">
@@ -77,6 +80,9 @@
     <ClCompile Include="Profile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TinyXml2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UbxComms.rc">
@@ -87,6 +93,7 @@
     <None Include="res\UbxComms.rc2">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\UbxComms.ico">

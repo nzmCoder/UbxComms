@@ -15,203 +15,234 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stdafx.h"
 #include "Profile.h"
-#include <crtdbg.h>
 
+// XML strings.
+const CString XML_DIR_NAME = "nzmCoder";
+const CString XML_COMMENT = "This file contains persistent data for the application";
 
-CProfile::CProfile()
+// XML tag elements.
+const char* XML_ROOT = "data";
+const char* XML_ELEMENT = "element";
+const char* XML_SECTION = "section";
+const char* XML_ENTRY = "entry";
+const char* XML_VALUE = "value";
+
+CProfile::CProfile() :
+   mXmlDocPtr(0),
+   mIsInitialized(false)
 {
-   // NOTE: Programmer must call Init function prior to
-   // use, likely from the Dialog's OnInitDialog.
-   // This class abuses CString, and will always throw an assertion.
-   // This makes it hard to run in debug mode, so put the output to the
-   // debug console instead of stopping with a dialog on failures.
-   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG);
+   // Init function must be called by OnInitDialog.
 }
 
 CProfile::~CProfile()
 {
-   // Only save to file if the profile was changed.
-   if (mNeedsSave)
-   {
-      CFile file;
-
-      // Save the profile array to the storage file.
-      if (!file.Open(mStrDataFullPath, CFile::modeCreate | CFile::modeWrite))
-      {
-         AfxMessageBox("Data settings could not be saved at: "
-            + mStrDataFullPath, MB_ICONSTOP);
-      }
-      else
-      {
-         // Write XML header.
-         CString str;
-         str = "<?xml version=\"1.0\"?>\r\n<!-- This file contains"\
-            " persistent data for the application -->\r\n<data>\r\n";
-         file.Write(str, str.GetLength());
-
-         int i;
-         for (i = 0; i < TABLE_SIZE; ++i)
-         {
-            _WriteElement(file,
-               mProfileTable[i].strSection,
-               mProfileTable[i].strEntry,
-               mProfileTable[i].strValue);
-         }
-
-         // Write XML footer.
-         str = "</data>\r\n";
-         file.Write(str, str.GetLength());
-
-         file.Close();
-      }
-   }
+   delete mXmlDocPtr;
+   mXmlDocPtr = 0;
 }
 
-void CProfile::Init(CString strDataFileName, bool bUseAppData)
+void CProfile::Init(CString strDataFilename, bool useAppDataLoc)
 {
-   mNeedsSave = false;
-   mWasInitPerformed = false;
-   mStrDataFileName = strDataFileName;
-
-   // Only allow init once.
-   if (mWasInitPerformed)
+   // Only allow initialization once.
+   if (!mIsInitialized)
    {
-      // It could mess up the filepath if it is allowed to be called twice.
-      AfxMessageBox("Programming error! Init called a second time.");
-      exit(0);
-   }
-   mWasInitPerformed = true;
+      mIsInitialized = true;
+      mStrDataFilename = strDataFilename;
 
-   // Keep track whether the profile was changed.
-   mNeedsSave = false;
-   CFile file;
-
-   if (bUseAppData)
-   {
-      // Adjust the name to place the profile in the user's %appdata% folder.
-      mStrDataFileName = PrepareAppDataFilename(mStrDataFileName);
-   }
-
-   // Load the profile array from the storage file.
-   if (!file.Open(mStrDataFileName, CFile::modeRead))
-   {
-      // File didn't open properly so just set the filename.
-      // we will create a new file later at destruction time.
-      mStrDataFullPath = file.GetFilePath();
-   }
-   else
-   {
-      // Open the existing file and read in the data.
-      mStrDataFullPath = file.GetFilePath();
-
-      for (int i = 0; i < TABLE_SIZE; ++i)
+      if (useAppDataLoc)
       {
-         _ReadElement(file, mProfileTable[i].strSection, mProfileTable[i].strEntry, mProfileTable[i].strValue);
+         // Adjust the name to place the profile in the user's APPDATA folder.
+         mStrDataFilename = PrepareAppDataFilename(mStrDataFilename);
       }
 
-      file.Close();
+      mXmlDocPtr = new tinyxml2::XMLDocument();
+
+      if (mXmlDocPtr->LoadFile(mStrDataFilename) != tinyxml2::XML_SUCCESS)
+      {
+         ClearProfile();
+      }
    }
 }
 
 void CProfile::ClearProfile()
 {
-   CFile file;
+   mXmlDocPtr->Clear();
 
-   // Delete the XML file.
-   file.Remove(mStrDataFullPath);
+   // Add the default declaration.
+   tinyxml2::XMLDeclaration* pDeclaration = mXmlDocPtr->NewDeclaration(0);
+   mXmlDocPtr->InsertEndChild(pDeclaration);
+   mXmlDocPtr->SetBOM(true);
+
+   // Add the header comment.
+   tinyxml2::XMLComment* pComment = mXmlDocPtr->NewComment(XML_COMMENT);
+   mXmlDocPtr->InsertEndChild(pComment);
+
+   // Add the root element.
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->NewElement(XML_ROOT);
+   mXmlDocPtr->InsertEndChild(pRoot);
+
+   // Save file.
+   mXmlDocPtr->SaveFile(mStrDataFilename);
 }
 
-UINT CProfile::GetProfileInt(CString strSection, CString strEntry, int nDefault)
+int CProfile::GetProfileInt(CString strSection, CString strEntry, int nDefault)
 {
-   UINT nValue = nDefault;
+   int value = nDefault;
+   bool isFound = false;
 
-   int i = 0;
-
-   if ((i = _FindEntry(strSection, strEntry)) != -1)
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
+   if (pRoot)
    {
-      nValue = atoi(mProfileTable[i].strValue);
+      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
+      while (elementPtr)
+      {
+         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
+         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
+
+         if (strXmlSection == strSection && strXmlEntry == strEntry)
+         {
+            CString strXmlValue(elementPtr->Attribute(XML_VALUE));
+
+            value = atoi(strXmlValue);
+            isFound = true;
+            break;
+         }
+
+         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
+      }
    }
 
-   return nValue;
+   if (!isFound)
+   {
+      WriteProfileInt(strSection, strEntry, nDefault);
+   }
+
+   return value;
 }
 
 bool CProfile::WriteProfileInt(CString strSection, CString strEntry, int nValue)
 {
-   bool bResult = true;
+   // Return value. True means attribute already existed.
+   bool isFound = false;
 
-   // Flag as 'dirty', needs to be saved to file.
-   mNeedsSave = true;
-
-   int i;
-   CString strValue;
-   strValue.Format("%d", nValue);
-
-   if ((i = _FindEntry(strSection, strEntry)) == -1)
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
+   if (pRoot)
    {
-      // Not found, so add new entry.
-      _AddEntry(strSection, strEntry, strValue);
-   }
-   else
-   {
-      // Update the found entry.
-      mProfileTable[i].strSection = strSection;
-      mProfileTable[i].strEntry = strEntry;
-      mProfileTable[i].strValue = strValue;
+      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
+      while (elementPtr)
+      {
+         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
+         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
 
-      bResult = true;
+         if (strXmlSection == strSection && strXmlEntry == strEntry)
+         {
+            // Existing attribute, update it.
+            elementPtr->SetAttribute(XML_VALUE, nValue);
+            mXmlDocPtr->SaveFile(mStrDataFilename);
+
+            isFound = true;
+            break;
+         }
+
+         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
+      }
+
+      if (!isFound)
+      {
+         // A new attribute, add it.
+         tinyxml2::XMLElement* pNewElement = mXmlDocPtr->NewElement(XML_ELEMENT);
+         pNewElement->SetAttribute(XML_SECTION, strSection);
+         pNewElement->SetAttribute(XML_ENTRY, strEntry);
+         pNewElement->SetAttribute(XML_VALUE, nValue);
+         pRoot->InsertEndChild(pNewElement);
+
+         mXmlDocPtr->SaveFile(mStrDataFilename);
+      }
    }
 
-   return bResult;
+   return isFound;
 }
 
 CString CProfile::GetProfileStr(CString strSection, CString strEntry, CString strDefault)
 {
-   CString strValue = strDefault;
+   CString value = strDefault;
+   bool isFound = false;
 
-   int i = 0;
-
-   if ((i = _FindEntry(strSection, strEntry)) != -1)
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
+   if (pRoot)
    {
-      strValue = mProfileTable[i].strValue;
+      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
+      while (elementPtr)
+      {
+         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
+         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
+
+         if (strXmlSection == strSection && strXmlEntry == strEntry)
+         {
+            CString strXmlValue(elementPtr->Attribute(XML_VALUE));
+
+            value = strXmlValue;
+            isFound = true;
+            break;
+         }
+
+         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
+      }
    }
 
-   return strValue;
+   if (!isFound)
+   {
+      WriteProfileStr(strSection, strEntry, strDefault);
+   }
+
+   return value;
 }
 
 bool CProfile::WriteProfileStr(CString strSection, CString strEntry, CString strValue)
 {
-   bool bResult = true;
+   // Return value. True means attribute already existed.
+   bool isFound = false;
 
-   // Flag as 'dirty', needs to be saved to file.
-   mNeedsSave = true;
-
-   int i;
-   if ((i = _FindEntry(strSection, strEntry)) == -1)
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
+   if (pRoot)
    {
-      // Not found, so add new entry.
-      _AddEntry(strSection, strEntry, strValue);
-   }
-   else
-   {
-      // Update the found entry.
-      mProfileTable[i].strSection = strSection;
-      mProfileTable[i].strEntry = strEntry;
-      mProfileTable[i].strValue = strValue;
+      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
+      while (elementPtr)
+      {
+         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
+         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
 
-      bResult = true;
+         if (strXmlSection == strSection && strXmlEntry == strEntry)
+         {
+            // Existing attribute, update it.
+            elementPtr->SetAttribute(XML_VALUE, strValue);
+            mXmlDocPtr->SaveFile(mStrDataFilename);
+
+            isFound = true;
+            break;
+         }
+
+         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
+      }
+
+      if (!isFound)
+      {
+         // A new attribute, add it.
+         tinyxml2::XMLElement* pNewElement = mXmlDocPtr->NewElement(XML_ELEMENT);
+         pNewElement->SetAttribute(XML_SECTION, strSection);
+         pNewElement->SetAttribute(XML_ENTRY, strEntry);
+         pNewElement->SetAttribute(XML_VALUE, strValue);
+         pRoot->InsertEndChild(pNewElement);
+
+         mXmlDocPtr->SaveFile(mStrDataFilename);
+      }
    }
 
-   return bResult;
+   return isFound;
 }
 
-CString CProfile::GetFileName() const
-{
-   return mStrDataFullPath;
-}
-
-// PRIVATE FUNCTIONS
 CString CProfile::PrepareAppDataFilename(CString strFileName)
 {
+   // Return value.
    CString strFullPathFilename;
 
    // Get the user's specific %appdata% path. This is an environment variable,
@@ -220,22 +251,20 @@ CString CProfile::PrepareAppDataFilename(CString strFileName)
 
    // Form the path name.
    CString strAppDataPath = getenv("AppData");
-   strAppDataPath += "\\nzmCoder";
+   strAppDataPath += "\\" + XML_DIR_NAME;
 
-   // This will create our folder in AppData only if it does not exist.
+   // This will create a folder in AppData only if it does not exist.
    if (CreateDirectory(strAppDataPath, NULL) ||
       ERROR_ALREADY_EXISTS == GetLastError())
    {
-      // One way or another, our AppData data folder now exists.
+      // One way or another, the folder now exists.
       // Concatenate to form the fully qualified user filename.
       strFullPathFilename = strAppDataPath + "\\" + strFileName;
    }
    else
    {
-      //AfxMessageBox("Error using the AppData folder", MB_ICONERROR);
-
       // Error using AppData folder, so set the filename to the passed-in
-      // value. This will safely fall back to making the file live in the
+      // value. This will safely fall-back to making the file live in the
       // current folder, which is set to the same folder as the EXE.
       strFullPathFilename = strFileName;
    }
@@ -243,112 +272,3 @@ CString CProfile::PrepareAppDataFilename(CString strFileName)
    // Return the full path and filename.
    return strFullPathFilename;
 }
-
-int CProfile::_FindEntry(CString strSection, CString strEntry)
-{
-   // Return index of found entry, -1 if not found.
-   int nFoundIdx = -1;
-
-   for (int i = 0; i < TABLE_SIZE; ++i)
-   {
-      if (mProfileTable[i].strSection == strSection
-         && mProfileTable[i].strEntry == strEntry)
-      {
-         nFoundIdx = i;
-         break;
-      }
-   }
-
-   return nFoundIdx;
-}
-
-bool CProfile::_AddEntry(CString strSection, CString strEntry, CString strValue)
-{
-   bool bResult = false;
-
-   for (int i = 0; i < TABLE_SIZE; ++i)
-   {
-      if (mProfileTable[i].strSection.IsEmpty())
-      {
-         // copy the strings in
-         mProfileTable[i].strSection = strSection;
-         mProfileTable[i].strEntry = strEntry;
-         mProfileTable[i].strValue = strValue;
-
-         bResult = true;
-         break;
-      }
-   }
-
-   return bResult;
-}
-
-void CProfile::_ReadElement(CFile& file, CString& strSection, CString& strEntry, CString& strValue)
-{
-   // assume valid until an error is found
-   bool bValid = true;
-
-   CString str;
-   char c;
-   int n;
-   int i, j;
-
-   // read one full element line from the file
-   do
-   {
-      n = file.Read(&c, 1);
-      str += c;
-   } while (c != '/' && n == 1);
-
-   if (n != 1) bValid = false;
-
-   // Parse the "section" tag.
-   n = str.Find("section=", 0);
-
-   // Find the opening quote.
-   i = str.Find("\"", n);
-
-   // Find the closing quote.
-   j = str.Find("\"", i + 1);
-
-   // Found the full string.
-   strSection = str.Mid(i + 1, j - i - 1);
-
-
-   // Parse the "entry" tag.
-   n = str.Find("entry=", j);
-
-   // Find the opening quote.
-   i = str.Find("\"", n);
-
-   // Find the closing quote.
-   j = str.Find("\"", i + 1);
-
-   // Found the full string.
-   strEntry = str.Mid(i + 1, j - i - 1);
-
-
-   // Parse the "value" tag.
-   n = str.Find("value=", j);
-
-   // Find the opening quote.
-   i = str.Find("\"", n);
-
-   // Find the closing quote.
-   j = str.Find("\"", i + 1);
-
-   // Found the full string.
-   strValue = str.Mid(i + 1, j - i - 1);
-}
-
-void CProfile::_WriteElement(CFile& file, CString strSection, CString strEntry, CString strValue)
-{
-   CString str;
-   str.Format("<element section=\"%s\" entry=\"%s\" value=\"%s\"></element>\r\n",
-      strSection,
-      strEntry,
-      strValue);
-
-   file.Write(str, str.GetLength());
-}
-

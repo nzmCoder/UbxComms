@@ -14,50 +14,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
 #pragma once
+#include "TinyXml2.h"
 
 class CProfile
 {
 public:
+
+   // Ctor/dtor.
    CProfile();
    virtual ~CProfile();
 
-   void Init(CString strDataFileName, bool bUseAppData = false);
+   // Second stage of construction, client must call upon start-up.
+   void Init(CString strDataFilename, bool bUseAppData = false);
+
+   // Clear out any existing stored data.
    void ClearProfile();
 
+   // Get and set string persistent data.
    bool WriteProfileStr(CString strSection, CString strEntry, CString strValue);
    CString GetProfileStr(CString strSection, CString strEntry, CString strDefault);
 
+   // Get and set integer persistent data.
    bool WriteProfileInt(CString strSection, CString strEntry, int nValue);
-   UINT GetProfileInt(CString strSection, CString strEntry, int nDefault);
-
-   CString GetFileName() const;
+   int GetProfileInt(CString strSection, CString strEntry, int nDefault);
 
 private:
 
-   typedef struct
-   {
-      CString strSection;
-      CString strEntry;
-      CString strValue;
-   } t_ProfileEntry;
-
-   bool _AddEntry(CString strSection, CString strEntry, CString strValue);
-   int _FindEntry(CString strSection, CString strEntry);
-
-   void _ReadElement(CFile& file, CString& strSection, CString& strEntry, CString& strValue);
-   void _WriteElement(CFile& file, CString strSection, CString strEntry, CString strValue);
-
+   // Convert the provided file name to a fully qualified path.
    CString PrepareAppDataFilename(CString strFileName);
 
-   // Data members.
-
-   // The maximum number of stored elements.
-   enum { TABLE_SIZE = 16 };
-
-   t_ProfileEntry mProfileTable[TABLE_SIZE];
-   CString mStrDataFullPath;
-   bool mNeedsSave;
-   CString mStrDataFileName;
-   bool mWasInitPerformed;
-   int dummy;
+   // Data members
+   tinyxml2::XMLDocument* mXmlDocPtr;
+   CString mStrDataFilename;
+   bool mIsInitialized;
 };
