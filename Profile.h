@@ -24,11 +24,11 @@ public:
    CProfile();
    virtual ~CProfile();
 
-   // Second stage of construction, client must call upon start-up.
-   void Init(CString strDataFilename, bool bUseAppData = false);
+   // Client must call upon start-up.
+   void Initialize(CString strDataFilename, bool bUseAppData = true);
 
    // Clear out any existing stored data.
-   void ClearProfile();
+   void Clear();
 
    // Get and set string persistent data.
    bool WriteProfileStr(CString strSection, CString strEntry, CString strValue);
@@ -40,7 +40,12 @@ public:
 
 private:
 
-   // Convert the provided file name to a fully qualified path.
+   // Helper methods.
+   tinyxml2::XMLElement* FindElement(CString strSection, CString strEntry);
+   void AddElement(CString strSection, CString strEntry, CString strValue);
+   void AddElement(CString strSection, CString strEntry, int nValue);
+
+   // Convert the provided file name to a fully qualified path and name.
    CString PrepareAppDataFilename(CString strFileName);
 
    // Data members

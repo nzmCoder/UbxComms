@@ -31,7 +31,7 @@ CProfile::CProfile() :
    mXmlDocPtr(0),
    mIsInitialized(false)
 {
-   // Init function must be called by OnInitDialog.
+   // Initialize function must be called on every start-up prior to use.
 }
 
 CProfile::~CProfile()
@@ -40,7 +40,7 @@ CProfile::~CProfile()
    mXmlDocPtr = 0;
 }
 
-void CProfile::Init(CString strDataFilename, bool useAppDataLoc)
+void CProfile::Initialize(CString strDataFilename, bool useAppDataLoc)
 {
    // Only allow initialization once.
    if (!mIsInitialized)
@@ -50,7 +50,7 @@ void CProfile::Init(CString strDataFilename, bool useAppDataLoc)
 
       if (useAppDataLoc)
       {
-         // Adjust the name to place the profile in the user's APPDATA folder.
+         // Adjust the name to place the file in the user's %appdata% folder.
          mStrDataFilename = PrepareAppDataFilename(mStrDataFilename);
       }
 
@@ -58,21 +58,21 @@ void CProfile::Init(CString strDataFilename, bool useAppDataLoc)
 
       if (mXmlDocPtr->LoadFile(mStrDataFilename) != tinyxml2::XML_SUCCESS)
       {
-         ClearProfile();
+         Clear();
       }
    }
 }
 
-void CProfile::ClearProfile()
+void CProfile::Clear()
 {
    mXmlDocPtr->Clear();
 
-   // Add the default declaration.
+   // Add the default declaration header.
    tinyxml2::XMLDeclaration* pDeclaration = mXmlDocPtr->NewDeclaration(0);
    mXmlDocPtr->InsertEndChild(pDeclaration);
    mXmlDocPtr->SetBOM(true);
 
-   // Add the header comment.
+   // Add our standard global comment.
    tinyxml2::XMLComment* pComment = mXmlDocPtr->NewComment(XML_COMMENT);
    mXmlDocPtr->InsertEndChild(pComment);
 
@@ -80,40 +80,26 @@ void CProfile::ClearProfile()
    tinyxml2::XMLElement* pRoot = mXmlDocPtr->NewElement(XML_ROOT);
    mXmlDocPtr->InsertEndChild(pRoot);
 
-   // Save file.
    mXmlDocPtr->SaveFile(mStrDataFilename);
 }
 
 int CProfile::GetProfileInt(CString strSection, CString strEntry, int nDefault)
 {
+   // Return value.
    int value = nDefault;
-   bool isFound = false;
 
-   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
-   if (pRoot)
+   tinyxml2::XMLElement* elementPtr = FindElement(strSection, strEntry);
+   if (elementPtr)
    {
-      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
-      while (elementPtr)
-      {
-         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
-         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
-
-         if (strXmlSection == strSection && strXmlEntry == strEntry)
-         {
-            CString strXmlValue(elementPtr->Attribute(XML_VALUE));
-
-            value = atoi(strXmlValue);
-            isFound = true;
-            break;
-         }
-
-         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
-      }
+      // Element existed, so get value.
+      CString strXmlValue(elementPtr->Attribute(XML_VALUE));
+      value = atoi(strXmlValue);
    }
-
-   if (!isFound)
+   else
    {
-      WriteProfileInt(strSection, strEntry, nDefault);
+      // Element didn't exist, so add it using default.
+      AddElement(strSection, strEntry, nDefault);
+      mXmlDocPtr->SaveFile(mStrDataFilename);
    }
 
    return value;
@@ -122,76 +108,44 @@ int CProfile::GetProfileInt(CString strSection, CString strEntry, int nDefault)
 bool CProfile::WriteProfileInt(CString strSection, CString strEntry, int nValue)
 {
    // Return value. True means attribute already existed.
-   bool isFound = false;
+   bool isExisting = false;
 
-   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
-   if (pRoot)
+   tinyxml2::XMLElement* elementPtr = FindElement(strSection, strEntry);
+   if (elementPtr)
    {
-      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
-      while (elementPtr)
-      {
-         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
-         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
-
-         if (strXmlSection == strSection && strXmlEntry == strEntry)
-         {
-            // Existing attribute, update it.
-            elementPtr->SetAttribute(XML_VALUE, nValue);
-            mXmlDocPtr->SaveFile(mStrDataFilename);
-
-            isFound = true;
-            break;
-         }
-
-         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
-      }
-
-      if (!isFound)
-      {
-         // A new attribute, add it.
-         tinyxml2::XMLElement* pNewElement = mXmlDocPtr->NewElement(XML_ELEMENT);
-         pNewElement->SetAttribute(XML_SECTION, strSection);
-         pNewElement->SetAttribute(XML_ENTRY, strEntry);
-         pNewElement->SetAttribute(XML_VALUE, nValue);
-         pRoot->InsertEndChild(pNewElement);
-
-         mXmlDocPtr->SaveFile(mStrDataFilename);
-      }
+      // Element existed, so update it.
+      elementPtr->SetAttribute(XML_VALUE, nValue);
+      isExisting = true;
+   }
+   else
+   {
+      // Element didn't exist, so add it.
+      AddElement(strSection, strEntry, nValue);
    }
 
-   return isFound;
+   mXmlDocPtr->SaveFile(mStrDataFilename);
+
+   return isExisting;
 }
 
 CString CProfile::GetProfileStr(CString strSection, CString strEntry, CString strDefault)
 {
+   // Return value.
    CString value = strDefault;
-   bool isFound = false;
 
-   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
-   if (pRoot)
+   tinyxml2::XMLElement* elementPtr = FindElement(strSection, strEntry);
+
+   if (elementPtr)
    {
-      tinyxml2::XMLElement* elementPtr = pRoot->FirstChildElement(XML_ELEMENT);
-      while (elementPtr)
-      {
-         CString strXmlSection(elementPtr->Attribute(XML_SECTION));
-         CString strXmlEntry(elementPtr->Attribute(XML_ENTRY));
-
-         if (strXmlSection == strSection && strXmlEntry == strEntry)
-         {
-            CString strXmlValue(elementPtr->Attribute(XML_VALUE));
-
-            value = strXmlValue;
-            isFound = true;
-            break;
-         }
-
-         elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
-      }
+      // Element existed, so get value.
+      CString strXmlValue(elementPtr->Attribute(XML_VALUE));
+      value = strXmlValue;
    }
-
-   if (!isFound)
+   else
    {
-      WriteProfileStr(strSection, strEntry, strDefault);
+      // Element didn't exist, so add it using default.
+      AddElement(strSection, strEntry, strDefault);
+      mXmlDocPtr->SaveFile(mStrDataFilename);
    }
 
    return value;
@@ -200,7 +154,30 @@ CString CProfile::GetProfileStr(CString strSection, CString strEntry, CString st
 bool CProfile::WriteProfileStr(CString strSection, CString strEntry, CString strValue)
 {
    // Return value. True means attribute already existed.
-   bool isFound = false;
+   bool isExisting = false;
+
+   tinyxml2::XMLElement* elementPtr = FindElement(strSection, strEntry);
+   if (elementPtr)
+   {
+      // Element existed, so update it.
+      elementPtr->SetAttribute(XML_VALUE, strValue);
+      isExisting = true;
+   }
+   else
+   {
+      // Element didn't exist, so add it.
+      AddElement(strSection, strEntry, strValue);
+   }
+
+   mXmlDocPtr->SaveFile(mStrDataFilename);
+
+   return isExisting;
+}
+
+tinyxml2::XMLElement* CProfile::FindElement(CString strSection, CString strEntry)
+{
+   // Return value.
+   tinyxml2::XMLElement* foundElementPtr = 0;
 
    tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
    if (pRoot)
@@ -213,31 +190,36 @@ bool CProfile::WriteProfileStr(CString strSection, CString strEntry, CString str
 
          if (strXmlSection == strSection && strXmlEntry == strEntry)
          {
-            // Existing attribute, update it.
-            elementPtr->SetAttribute(XML_VALUE, strValue);
-            mXmlDocPtr->SaveFile(mStrDataFilename);
-
-            isFound = true;
+            foundElementPtr = elementPtr;
             break;
          }
 
          elementPtr = elementPtr->NextSiblingElement(XML_ELEMENT);
       }
-
-      if (!isFound)
-      {
-         // A new attribute, add it.
-         tinyxml2::XMLElement* pNewElement = mXmlDocPtr->NewElement(XML_ELEMENT);
-         pNewElement->SetAttribute(XML_SECTION, strSection);
-         pNewElement->SetAttribute(XML_ENTRY, strEntry);
-         pNewElement->SetAttribute(XML_VALUE, strValue);
-         pRoot->InsertEndChild(pNewElement);
-
-         mXmlDocPtr->SaveFile(mStrDataFilename);
-      }
    }
 
-   return isFound;
+   return foundElementPtr;
+}
+
+void CProfile::AddElement(CString strSection, CString strEntry, int nValue)
+{
+   CString strValue;
+   strValue.Format("%d", nValue);
+
+   AddElement(strSection, strEntry, strValue);
+}
+
+void CProfile::AddElement(CString strSection, CString strEntry, CString strValue)
+{
+   tinyxml2::XMLElement* pRoot = mXmlDocPtr->FirstChildElement(XML_ROOT);
+   if (pRoot)
+   {
+      tinyxml2::XMLElement* pNewElement = mXmlDocPtr->NewElement(XML_ELEMENT);
+      pNewElement->SetAttribute(XML_SECTION, strSection);
+      pNewElement->SetAttribute(XML_ENTRY, strEntry);
+      pNewElement->SetAttribute(XML_VALUE, strValue);
+      pRoot->InsertEndChild(pNewElement);
+   }
 }
 
 CString CProfile::PrepareAppDataFilename(CString strFileName)

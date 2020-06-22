@@ -115,7 +115,7 @@ BOOL CUbxCommsDlg::OnInitDialog()
    OutputDebugString("Started Serial Timer(s).\r\n");
 
    // Set up access to persistent data.
-   mProfile.Init("UbxComms.xml", true);
+   mProfile.Initialize("UbxComms.xml");
 
    // Set the COM port.
    CString str = mProfile.GetProfileStr("Config", "ComPort", "COM1");
